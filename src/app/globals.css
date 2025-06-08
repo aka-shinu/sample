@@ -31,10 +31,10 @@ body{
   background-color: var(--chatgpt-bg);
 }
 a {
-  text-decoration: none;
+  text-decoration: none !important;
 }
 a:hover{
-    text-decoration: none;
+    text-decoration: none !important;
 }
 
 @theme inline {
