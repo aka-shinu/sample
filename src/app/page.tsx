@@ -397,7 +397,7 @@ export default function Home() {
 
 At the end of the response, add the title for this prompt as a plain text line starting with "title:" without any markdown or special formatting.
 
-The title should be  3 words long and captures the main idea of the prompt.
+The title should not be more than 3 words and captures the main idea of the prompt.
 attach title like this:
 
 title: <title>
