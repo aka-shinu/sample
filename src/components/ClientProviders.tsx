@@ -6,7 +6,6 @@ import { trpc } from '@/utils/trpc';
 import { httpBatchLink } from '@trpc/client';
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 
-// Add type declaration for bootstrap bundle
 
 
 interface ClientProvidersProps {
@@ -14,10 +13,6 @@ interface ClientProvidersProps {
 }
 
 const ClientProviders: React.FC<ClientProvidersProps> = ({ children }) => {
-  useEffect(() => {
-    void require('bootstrap/dist/js/bootstrap.bundle.min.js');
-  }, []);
-
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: { 
       queries: {
