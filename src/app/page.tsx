@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect} from "react";
 import { trpc } from "@/utils/trpc";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { Roboto } from "next/font/google";
@@ -295,7 +295,7 @@ export default function Home() {
   });
   console.log(pendingGeminiMessage, pendingAIMessage);
   // Modify handleNewChat to check for existing "New Chat"
-  const handleNewChat = useCallback(() => {
+  const handleNewChat = async () => {
     if (!user?.sub || isCreatingConversation) return;
 
     // Check if there's already a "New Chat" conversation
@@ -311,7 +311,7 @@ export default function Home() {
         setShowSidebar(false);
       }
     }
-  }, [user?.sub, isCreatingConversation, createConversation, conversations]);
+  };
   // Add error handling for conversation creation
   useEffect(() => {
     if (createConversation.status === "error") {
@@ -321,10 +321,10 @@ export default function Home() {
   }, [createConversation.status, createConversation.error]);
 
   // Add handlers for conversation management
-  const handleSwitchConversation = useCallback((conversation: Conversation) => {
+  const handleSwitchConversation = async (conversation: Conversation) => {
     setCurrentConversation(conversation);
     setShowSidebar(false);
-  }, []);
+  }
 
   // Sync backend messages to local state only when conversation changes and loading is done
   useEffect(() => {
@@ -520,7 +520,7 @@ title: <title>
   };
 
   // Define handleResponse first
-  const handleResponse = useCallback(async () => {
+  const handleResponse = async () => {
     if (pendingGeminiUpdate) {
       await updateGeminiResponse.mutateAsync({
         message_id: pendingGeminiUpdate.id,
@@ -539,8 +539,7 @@ title: <title>
       }
       setPendingGeminiUpdate(null);
     }
-  }, [pendingGeminiUpdate, mode, currentConversation, title, input2, updateGeminiResponse, updateConversationTitle]);
-
+  }
   // Then use it in useEffect
   useEffect(() => {
     if (pendingGeminiUpdate?.isPaused || pendingGeminiUpdate?.contentType == "image") {
@@ -619,9 +618,7 @@ title: <title>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, aiTypingText]);
 
-  // Reset showPendingActions when pendingGeminiMessage changes
   
-
   // When conversations load, set 'New Chat' as the default conversation if it exists
   useEffect(() => {
     if (conversations.length > 0 && !currentConversation) {
@@ -636,10 +633,8 @@ title: <title>
     }
   }, [conversations, currentConversation]);
 
-  // Add state for image mode:
   const [isImageMode, setIsImageMode] = useState(false);
 
-  // Handler for file input change (reuse your existing upload logic)
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -648,7 +643,6 @@ title: <title>
     setShowUploadMenu(false);
   };
 
-  // Fix unused uploadData
   const handleImageUpload = async (file: File) => {
     try {
       const formData = new FormData();
@@ -658,13 +652,6 @@ title: <title>
       console.error('Error uploading image:', error);
     }
   };
-
-  // Fix useEffect with handleResponse
-  useEffect(() => {
-    if (currentConversation) {
-      handleResponse();
-    }
-  }, [currentConversation, handleResponse]);
 
   return (
     <div className="chat-container">

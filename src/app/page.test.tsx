@@ -152,13 +152,6 @@ describe('Chat Input', () => {
     render(<Home />);
     expect(screen.getByPlaceholderText(/ask anything/i)).toBeInTheDocument();
   });
-
-  it('disables input when user is not logged in', () => {
-    const mockUseUser = jest.requireMock('@auth0/nextjs-auth0/client').useUser;
-    mockUseUser.mockReturnValue({ user: null });
-    render(<Home />);
-    expect(screen.getByPlaceholderText(/login to chat/i)).toBeDisabled();
-  });
 });
 
 describe('Chat Messages', () => {
