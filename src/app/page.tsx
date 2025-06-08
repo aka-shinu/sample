@@ -298,7 +298,7 @@ export default function Home() {
       setIsCreated(true);
     };
     initializeConversation();
-  }, [isConversationsLoading,isCreated]);
+  }, [user?.sub]);
 
   // Add a loading state for conversation creation
   const isCreatingConversation = createConversation.status === "pending";
@@ -975,10 +975,8 @@ title: <title>
                                   alt={`User message in ${mode} mode`}
                                   className="w-full cursor-pointer"
                                   onClick={() => {
-                                    if (msg.gemini_response) {
-                                      setCurrimg(msg.gemini_response);
+                                      setCurrimg(msg.gemini_response || msg.content);
                                       setImageViewMode(true);
-                                    }
                                   }}
                                 />
                               )
