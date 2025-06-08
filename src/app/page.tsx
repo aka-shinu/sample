@@ -544,7 +544,7 @@ title: <title>
     if (pendingGeminiUpdate?.isPaused || pendingGeminiUpdate?.contentType == "image") {
       handleResponse();
     }
-  }, [pendingGeminiUpdate, handleResponse]);
+  }, [pendingGeminiUpdate]);
 
   // When typing is done, add Gemini's message to local state and backend, but do NOT refetch
   const handleTypingComplete = async (msg: Message) => {
