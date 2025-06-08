@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import Home from './page';
 import { trpc } from '@/utils/trpc';
-import { useUser } from '@auth0/nextjs-auth0/client';
 
 // Mock auth0 user
 const mockUserId = 'google-oauth2|103865496192378177413';
@@ -156,7 +155,8 @@ describe('Chat Input', () => {
   });
 
   it('disables input when user is not logged in', () => {
-    jest.spyOn(require('@auth0/nextjs-auth0/client'), 'useUser').mockReturnValue({ user: null });
+    const mockUseUser = jest.requireMock('@auth0/nextjs-auth0/client').useUser;
+    mockUseUser.mockReturnValue({ user: null });
     render(<Home />);
     expect(screen.getByPlaceholderText(/login to chat/i)).toBeDisabled();
   });
