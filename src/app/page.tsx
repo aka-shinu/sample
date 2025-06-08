@@ -246,7 +246,6 @@ export default function Home() {
   const geminiText = trpc.geminiText.useMutation();
   const geminiImage = trpc.geminiImage.useMutation();
 
-  // Add state for AI message state machine
   const [aiState, setAiState] = useState<"idle" | "loading" | "typing">("idle");
   const [aiTypingText, setAiTypingText] = useState<string | null>(null);
 
