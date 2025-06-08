@@ -17,20 +17,35 @@ import Link from 'next/link';
 
 // Add Conversation type
 function extractAndClean(text: string) {
-  // Match the last line containing the title
-  const match = text.match(/(.*:\s*)(.*)$/m);
+  // Trim whitespace from the start and end, then split the text into lines.
+  // The regex /\r?\n/ handles both Windows (CRLF) and Unix (LF) line endings.
+  const lines = text.trim().split(/\r?\n/);
+
+  // Get the last line to check for the title.
+  const lastLine = lines[lines.length - 1];
+
+  // A simple regex to check if the line starts with "title:" followed by any text.
+  // '^' asserts the start of the string.
+  // '(.*)' captures the actual title text.
+  const match = lastLine.match(/^title:\s*(.*)$/);
 
   if (match) {
-    const title = match[2].trim();
+    // The captured title text is in the second element of the match array (index 1).
+    const title = match[1].trim();
 
-    // Remove the entire line containing the title
-    const cleanedText = text.replace(match[0], "").trim();
+    // Remove the last line from our array of lines.
+    lines.pop();
+
+    // Join the remaining lines back together with a standard newline character.
+    const cleanedText = lines.join('\n');
 
     return { title, cleanedText };
   }
 
+  // If the last line does not match our format, return the original text.
   return { title: null, cleanedText: text };
 }
+
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"], // optional weights
