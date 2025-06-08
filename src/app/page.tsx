@@ -212,8 +212,6 @@ export default function Home() {
   const isHandlingSend = useRef(false);
   const [isGeminiLoading, setIsGeminiLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isSavingGemini, setIsSavingGemini] = useState(false);
-  const [showPendingActions, setShowPendingActions] = useState(false);
   const [pendingGeminiMessage] = useState<Message | null>(null);
 
   // Add conversation queries and mutations
@@ -555,20 +553,17 @@ title: <title>
   const handleTypingComplete = async (msg: Message) => {
     if (onTypingDoneCalled.current) return;
     onTypingDoneCalled.current = true;
-    setIsSavingGemini(true);
     setAiState("idle");
     setAiTypingText(null);
     setMessages((prev) =>
       prev.map((m) => (m.id === msg.id ? { ...m, isTyping: false } : m))
     );
     await handleResponse();
-    setIsSavingGemini(false);
   };
   const handleTypingPaused = async (msg: Message, text: string) => {
     msg.content = text;
     if (onTypingDoneCalled.current) return;
     onTypingDoneCalled.current = true;
-    setIsSavingGemini(true);
     setAiState("idle");
     setAiTypingText(null);
     setMessages((prev) =>
@@ -582,7 +577,6 @@ title: <title>
         isPaused: true,
       };
     });
-    setIsSavingGemini(false);
   };
 
   const isMutating =
@@ -627,9 +621,7 @@ title: <title>
   }, [messages, aiTypingText]);
 
   // Reset showPendingActions when pendingGeminiMessage changes
-  useEffect(() => {
-    if (!pendingGeminiMessage) setShowPendingActions(false);
-  }, [pendingGeminiMessage]);
+  
 
   // When conversations load, set 'New Chat' as the default conversation if it exists
   useEffect(() => {
