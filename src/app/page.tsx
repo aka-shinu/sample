@@ -264,10 +264,8 @@ export default function Home() {
   const fileInputCameraRef = useRef<HTMLInputElement>(null);
   const fileInputFilesRef = useRef<HTMLInputElement>(null);
 
-  // Add state for pausing Gemini response
   const [isPaused, setIsPaused] = useState<PauseState>("idle");
 
-  // Create initial conversation if none exists (run only once per session)
   useEffect(() => {
     if (isConversationsLoading) return;
     const initializeConversation = async () => {
@@ -281,7 +279,7 @@ export default function Home() {
       }
     };
     initializeConversation();
-  }, [user?.sub, isConversationsLoading, conversations, createConversation]);
+  }, []);
 
   // Add a loading state for conversation creation
   const isCreatingConversation = createConversation.status === "pending";
@@ -334,7 +332,6 @@ export default function Home() {
     // eslint-disable-next-line
   }, [currentConversation?.id, isMessagesLoading]);
 
-  // Update handleSend to optimistically add user message to local state
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isHandlingSend.current) return;
@@ -344,7 +341,6 @@ export default function Home() {
       return;
     }
 
-    // Add user message optimistically
     const userMsg: Message = {
       id: Math.random().toString(36).substr(2, 9), // temp id
       content: input,
@@ -355,8 +351,6 @@ export default function Home() {
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMsg]);
-
-    // Add user message to backend
     let dbUserMsg;
     try {
       dbUserMsg = await addMessage.mutateAsync({
