@@ -13,7 +13,6 @@ import {
   SquarePen,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import Image from 'next/image';
 import Link from 'next/link';
 
 // Add Conversation type
@@ -795,7 +794,7 @@ title: <title>
         onClick={() => setImageViewMode((v) => !v)}
       >
         <div className="w-[80%] flex items-center justify-center h-full">
-          <Image
+          <img
             src={currimg}
             alt=""
             className="object-cover relative"
@@ -895,7 +894,7 @@ title: <title>
                           {msg.contentType == "text" ? (
                             <ReactMarkdown>{msg.gemini_response || ''}</ReactMarkdown>
                           ) : (
-                            <Image
+                            <img
                               width={500}
                               height={300}
                               src={msg.gemini_response || msg.content || ''}
@@ -970,7 +969,7 @@ title: <title>
                               msg.contentType == "text" ? (
                                 <ReactMarkdown>{msg.content}</ReactMarkdown>
                               ) : (
-                                <Image
+                                <img
                                   width={500}
                                   height={300}
                                   src={msg.gemini_response || msg.content || ''}
