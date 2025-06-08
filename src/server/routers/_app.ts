@@ -9,6 +9,18 @@ const GEMINI_IMAGE_MODEL = 'gemini-2.0-flash-preview-image-generation';
 
 const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
 
+// Fix any type
+type GeminiError = {
+  message: string;
+  code: number;
+};
+
+// Fix unused variables
+const handleGeminiError = (error: GeminiError) => {
+  console.error('Gemini API error:', error.message);
+  throw new Error(error.message);
+};
+
 export const appRouter = router({
   hello: procedure
     .input(z.object({
@@ -76,9 +88,11 @@ export const appRouter = router({
         }
         console.log(fullText);
         return { text: fullText };
-      } catch (error: any) {
-        console.log(error)
-        return { text: error.response.data.error.message };
+      } catch (error) {
+        if (error instanceof Error) {
+          handleGeminiError({ message: error.message, code: 500 });
+        }
+        throw error;
       }
     }),
   geminiImage: procedure

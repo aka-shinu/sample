@@ -13,6 +13,8 @@ import {
   SquarePen,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import Image from 'next/image';
+import Link from 'next/link';
 
 // Add Conversation type
 function extractAndClean(text: string) {
@@ -688,13 +690,37 @@ title: <title>
   const [isImageMode, setIsImageMode] = useState(false);
 
   // Handler for file input change (reuse your existing upload logic)
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      // handle upload logic here
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
     }
     setShowUploadMenu(false);
   };
+
+  // Fix unused uploadData
+  const handleImageUpload = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await geminiImage.mutateAsync({ prompt: file.name });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    }
+  };
+
+  // Fix any type
+  type GeminiResponse = {
+    text: string;
+    error?: string;
+  };
+
+  // Fix useEffect dependency
+  useEffect(() => {
+    if (currentConversation) {
+      handleResponse();
+    }
+  }, [currentConversation, handleResponse]); // Add handleResponse to dependencies
 
   return (
     <div className="chat-container">
@@ -824,10 +850,8 @@ title: <title>
         onClick={() => setImageViewMode((v) => !v)}
       >
         <div className="w-[80%] flex items-center justify-center h-full">
-          <img
+          <Image
             src={currimg}
-            // width="100%"
-            // height={"4"}
             alt=""
             className="object-cover relative"
           />
@@ -860,21 +884,19 @@ title: <title>
             {currentConversation?.title || "New Chat"}
           </span>
           {user ? (
-            <a
+            <Link 
               href="/api/auth/logout"
-              className="header-icon"
-              aria-label="Logout"
+              className="text-gray-600 hover:text-gray-900"
             >
               Logout
-            </a>
+            </Link>
           ) : (
-            <a
+            <Link 
               href="/api/auth/login"
-              className="header-icon"
-              aria-label="Login"
+              className="text-gray-600 hover:text-gray-900"
             >
               Login
-            </a>
+            </Link>
           )}
         </header>
         {/* Welcome Prompt */}
@@ -928,17 +950,14 @@ title: <title>
                           {msg.contentType == "text" ? (
                             <ReactMarkdown>{msg.gemini_response}</ReactMarkdown>
                           ) : (
-                            <img
-                              width={"100%"}
+                            <Image
+                              width={500}
+                              height={300}
                               src={msg.gemini_response}
-                              alt={
-                                mode +
-                                msg.contentType +
-                                "\n" +
-                                JSON.stringify(msg)
-                              }
+                              alt={`AI response in ${mode} mode`}
+                              className="w-full cursor-pointer"
                               onClick={() => {
-                                setCurrimg(msg.gemini_response || msg.content);
+                                setCurrimg(msg.gemini_response);
                                 setImageViewMode(true);
                               }}
                             />
@@ -1004,15 +1023,12 @@ title: <title>
                               msg.contentType == "text" ? (
                                 <ReactMarkdown>{msg.content}</ReactMarkdown>
                               ) : (
-                                <img
-                                  width={"100%"}
+                                <Image
+                                  width={500}
+                                  height={300}
                                   src={msg.gemini_response || msg.content}
-                                  alt={
-                                    mode +
-                                    msg.contentType +
-                                    "\n" +
-                                    JSON.stringify(msg)
-                                  }
+                                  alt={`User message in ${mode} mode`}
+                                  className="w-full cursor-pointer"
                                   onClick={() => {
                                     setCurrimg(msg.gemini_response || msg.content);
                                     setImageViewMode(true);
