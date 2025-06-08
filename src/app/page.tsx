@@ -393,11 +393,11 @@ export default function Home() {
       if (mode === "text") {
         const res = await geminiText.mutateAsync({
           prompt: `
-          Answer the following prompt: ${input}.
+          Answer the following user prompt: ${input}.
 
 At the end of the response, add the title for this prompt as a plain text line starting with "title:" without any markdown or special formatting.
 
-The title should not be more than 3 words and captures the main idea of the prompt.
+The title should not be more than 3 words and captures the main idea of the input user prompt (no more than 3 words).
 attach title like this:
 
 title: <title>
