@@ -144,9 +144,9 @@ export const appRouter = router({
     .mutation(async ({ input }) => {
       console.log('Updating message', input.message_id, 'with Gemini response:', input.gemini_response);
       if(input.contentType == "image"){
-        const { data, error } = await supabase.storage
-        .from("images")
-        .upload("avatars/unique-name.png", input.gemini_response, { contentType: "image/png" });
+        await supabase.storage
+          .from("images")
+          .upload("avatars/unique-name.png", input.gemini_response, { contentType: "image/png" });
       }
       const { data, error } = await supabase
         .from('messages')

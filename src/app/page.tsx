@@ -205,6 +205,20 @@ function MessageActions() {
   );
 }
 
+// Add proper type for Gemini response
+type GeminiResponse = {
+  text: string;
+  error?: string;
+};
+
+// Add proper type for image part
+type ImagePart = {
+  inlineData?: {
+    mimeType?: string;
+    data?: string;
+  };
+};
+
 export default function Home() {
   const [input, setInput] = useState("");
   const [input2, setInput2] = useState("");
@@ -398,8 +412,8 @@ export default function Home() {
         conversation_id: currentConversation.id,
         contentType: mode,
       });
-    } catch (err) {
-      // Optionally handle error
+    } catch (error) {
+      console.error('Failed to add message:', error);
     }
     setInput2(input);
     setInput("");
@@ -454,20 +468,12 @@ title: <title>
       } else {
         const res = await geminiImage.mutateAsync({ prompt: input });
         setIsGeminiLoading(false);
-        const imagePart = res.data?.parts?.find((p: any) =>
+        const imagePart = res.data?.parts?.find((p: ImagePart) =>
           p.inlineData?.mimeType?.startsWith("image/")
         );
-        if (
-          imagePart &&
-          imagePart.inlineData?.data &&
-          (dbUserMsg?.id || userMsg.id)
-        ) {
-          const imageData = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
-          onTypingDoneCalled.current = false;
-
-          // Convert base64 to blob
+        if (imagePart?.inlineData?.data) {
           const base64Data = imagePart.inlineData.data;
-          const mimeType = imagePart.inlineData.mimeType || "image/jpeg"; // Default to JPEG if mimeType is undefined
+          const mimeType = imagePart.inlineData.mimeType || "image/jpeg";
           const byteCharacters = atob(base64Data);
           const byteArrays = [];
           for (let offset = 0; offset < byteCharacters.length; offset += 512) {
@@ -483,20 +489,17 @@ title: <title>
 
           // Upload to Supabase Storage
           const fileExtension = mimeType.split("/")[1] || "jpg";
-          const fileName = `images/${
-            currentConversation.id
-          }/${Date.now()}.${fileExtension}`;
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage.from("messages").upload(fileName, blob);
+          const fileName = `images/${currentConversation.id}/${Date.now()}.${fileExtension}`;
+          const { error: uploadError } = await supabase.storage
+            .from("messages")
+            .upload(fileName, blob);
 
           if (uploadError) {
             console.error("Error uploading image:", uploadError);
             if (uploadError.message.includes("bucket not found")) {
-              // Add error message about missing bucket
               const errorMsg: Message = {
                 id: Math.random().toString(36).substr(2, 9),
-                content:
-                  "Error: Storage bucket 'messages' not found. Please create a storage bucket named 'messages' in your Supabase project.",
+                content: "Error: Storage bucket 'messages' not found. Please create a storage bucket named 'messages' in your Supabase project.",
                 role: "assistant",
                 user_id: "gemini",
                 conversation_id: currentConversation.id,
@@ -511,9 +514,9 @@ title: <title>
           }
 
           // Get public URL
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("messages").getPublicUrl(fileName);
+          const { data: { publicUrl } } = supabase.storage
+            .from("messages")
+            .getPublicUrl(fileName);
 
           // Add Gemini message with image URL
           const geminiMsg: Message = {
@@ -570,10 +573,9 @@ title: <title>
     }
   }, [pendingGeminiUpdate]);
 
-  const handleResponse = async () => {
-    console.log(mode, pendingGeminiUpdate);
+  // Wrap handleResponse in useCallback
+  const handleResponse = useCallback(async () => {
     if (pendingGeminiUpdate) {
-      console.log(pendingGeminiUpdate);
       await updateGeminiResponse.mutateAsync({
         message_id: pendingGeminiUpdate.id,
         gemini_response: pendingGeminiUpdate.response,
@@ -591,7 +593,8 @@ title: <title>
       }
       setPendingGeminiUpdate(null);
     }
-  };
+  }, [pendingGeminiUpdate, mode, currentConversation, title, input2, updateGeminiResponse, updateConversationTitle]);
+
   // When typing is done, add Gemini's message to local state and backend, but do NOT refetch
   const handleTypingComplete = async (msg: Message) => {
     if (onTypingDoneCalled.current) return;
@@ -709,18 +712,12 @@ title: <title>
     }
   };
 
-  // Fix any type
-  type GeminiResponse = {
-    text: string;
-    error?: string;
-  };
-
-  // Fix useEffect dependency
+  // Fix useEffect with handleResponse
   useEffect(() => {
     if (currentConversation) {
       handleResponse();
     }
-  }, [currentConversation, handleResponse]); // Add handleResponse to dependencies
+  }, [currentConversation, handleResponse]);
 
   return (
     <div className="chat-container">
