@@ -260,8 +260,7 @@ export default function Home() {
 
   const [isGeminiLoading, setIsGeminiLoading] = useState(false);
 
-  const [pendingGeminiMessage, setPendingGeminiMessage] =
-    useState<Message | null>(null);
+  const [pendingGeminiMessage, setPendingGeminiMessage] = useState<Message | null>(null);
   const [showPendingActions, setShowPendingActions] = useState(false);
 
   // Add state for bottom sheet/modal
@@ -276,7 +275,7 @@ export default function Home() {
   // Add state for search term
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Restore necessary state variables
+  // Restore necessary state variables with setters
   const [isSavingGemini, setIsSavingGemini] = useState(false);
 
   // Create initial conversation if none exists (run only once per session)
@@ -529,16 +528,8 @@ title: <title>
     }
     isHandlingSend.current = false;
   };
-  useEffect(() => {
-    if (
-      pendingGeminiUpdate?.isPaused ||
-      pendingGeminiUpdate?.contentType == "image"
-    ) {
-      handleResponse();
-    }
-  }, [pendingGeminiUpdate]);
 
-  // Wrap handleResponse in useCallback
+  // Define handleResponse first
   const handleResponse = useCallback(async () => {
     if (pendingGeminiUpdate) {
       await updateGeminiResponse.mutateAsync({
@@ -559,6 +550,13 @@ title: <title>
       setPendingGeminiUpdate(null);
     }
   }, [pendingGeminiUpdate, mode, currentConversation, title, input2, updateGeminiResponse, updateConversationTitle]);
+
+  // Then use it in useEffect
+  useEffect(() => {
+    if (pendingGeminiUpdate?.isPaused || pendingGeminiUpdate?.contentType == "image") {
+      handleResponse();
+    }
+  }, [pendingGeminiUpdate, handleResponse]);
 
   // When typing is done, add Gemini's message to local state and backend, but do NOT refetch
   const handleTypingComplete = async (msg: Message) => {
