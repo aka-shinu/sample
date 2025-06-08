@@ -263,13 +263,14 @@ export default function Home() {
   const fileInputPhotosRef = useRef<HTMLInputElement>(null);
   const fileInputCameraRef = useRef<HTMLInputElement>(null);
   const fileInputFilesRef = useRef<HTMLInputElement>(null);
-
+  const [isCreated,setIsCreated] = useState(false);
   // Add state for pausing Gemini response
   const [isPaused, setIsPaused] = useState<PauseState>("idle");
 
   // Create initial conversation if none exists (run only once per session)
   useEffect(() => {
     if (isConversationsLoading) return;
+    if (isCreated) return;
     const initializeConversation = async () => {
       if (!user?.sub) return;
       const hasNewChat = conversations.some(
@@ -279,9 +280,10 @@ export default function Home() {
         hasCreatedInitialConversation.current = true;
         await createConversation.mutateAsync({ user_id: user.sub });
       }
+      setIsCreated(true);
     };
     initializeConversation();
-  }, [isConversationsLoading]);
+  }, [isConversationsLoading,isCreated]);
 
   // Add a loading state for conversation creation
   const isCreatingConversation = createConversation.status === "pending";
