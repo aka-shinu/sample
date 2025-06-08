@@ -264,8 +264,10 @@ export default function Home() {
   const fileInputCameraRef = useRef<HTMLInputElement>(null);
   const fileInputFilesRef = useRef<HTMLInputElement>(null);
 
+  // Add state for pausing Gemini response
   const [isPaused, setIsPaused] = useState<PauseState>("idle");
 
+  // Create initial conversation if none exists (run only once per session)
   useEffect(() => {
     if (isConversationsLoading) return;
     const initializeConversation = async () => {
@@ -279,7 +281,7 @@ export default function Home() {
       }
     };
     initializeConversation();
-  }, []);
+  }, [isConversationsLoading]);
 
   // Add a loading state for conversation creation
   const isCreatingConversation = createConversation.status === "pending";
