@@ -831,14 +831,14 @@ title: <title>
           {user ? (
             <Link 
               href="/api/auth/logout"
-              className="text-gray-600 hover:text-gray-900"
+              className="!text-gray-600 hover:!text-gray-900"
             >
               Logout
             </Link>
           ) : (
             <Link 
               href="/api/auth/login"
-              className="text-gray-600 hover:text-gray-900"
+              className="!text-gray-600 hover:!text-gray-900"
             >
               Login
             </Link>
