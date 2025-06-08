@@ -54,6 +54,7 @@ type Message = {
   is_pending?: boolean;
   isTyping?: boolean;
   contentType?: "text" | "image";
+  gemini_response?: string;
 };
 
 // Add state for pausing Gemini response
@@ -146,7 +147,8 @@ function TypingBubble({
     } else if (displayedCount === text.length && onDone) {
       onDone();
     }
-  }, [displayedCount, text, onDone, isPaused]);
+  }, [displayedCount, text, onDone, isPaused, onPause]);
+
   setTimeout(() => {
     msgRef.current?.scrollIntoView({ behavior: "smooth" });
   }, 100);
@@ -178,38 +180,6 @@ function BouncingDots() {
     </div>
   );
 }
-
-function MessageActions() {
-  return (
-    <div style={{ display: "flex", gap: 8, marginTop: 4, marginLeft: 4 }}>
-      <button className="input-icon" title="Like" aria-label="Like">
-        👍
-      </button>
-      <button className="input-icon" title="Dislike" aria-label="Dislike">
-        👎
-      </button>
-      <button
-        className="input-icon"
-        title="Copy"
-        aria-label="Copy"
-        onClick={() => {
-          navigator.clipboard.writeText("");
-        }}
-      >
-        📋
-      </button>
-      <button className="input-icon" title="Regenerate" aria-label="Regenerate">
-        🔄
-      </button>
-    </div>
-  );
-}
-
-// Add proper type for Gemini response
-type GeminiResponse = {
-  text: string;
-  error?: string;
-};
 
 // Add proper type for image part
 type ImagePart = {
@@ -265,8 +235,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const addMessage = trpc.addMessage.useMutation({
-    onSuccess: (data, variables) => {
-      // utils.getMessages.invalidate();
+    onSuccess: () => {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -289,8 +258,6 @@ export default function Home() {
     contentType?: "text" | "image" | null | undefined;
   } | null>(null);
 
-  const [isSavingGemini, setIsSavingGemini] = useState(false);
-
   const [isGeminiLoading, setIsGeminiLoading] = useState(false);
 
   const [pendingGeminiMessage, setPendingGeminiMessage] =
@@ -309,26 +276,24 @@ export default function Home() {
   // Add state for search term
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Restore necessary state variables
+  const [isSavingGemini, setIsSavingGemini] = useState(false);
+
   // Create initial conversation if none exists (run only once per session)
   useEffect(() => {
-    if (isConversationsLoading) return; // Wait for conversations to load
+    if (isConversationsLoading) return;
     const initializeConversation = async () => {
       if (!user?.sub) return;
-      console.log(conversations, "{{}}}");
-      // Check if there's already a "New Chat" conversation
       const hasNewChat = conversations.some(
         (conv) => conv.title.toLowerCase() === "new chat"
       );
-      if (hasNewChat) {
-        return;
-      }
       if (!hasNewChat) {
         hasCreatedInitialConversation.current = true;
         await createConversation.mutateAsync({ user_id: user.sub });
       }
     };
     initializeConversation();
-  }, [user?.sub, isConversationsLoading]); // Only run when user or loading state changes
+  }, [user?.sub, isConversationsLoading, conversations, createConversation]);
 
   // Add a loading state for conversation creation
   const isCreatingConversation = createConversation.status === "pending";
@@ -540,9 +505,9 @@ title: <title>
           setAiState("typing");
         }
       }
-    } catch (err) {
+    } catch (error: unknown) {
       setIsGeminiLoading(false);
-      const errorMessage = "Gemini API error: " + (err as any)?.message;
+      const errorMessage = "Gemini API error: " + (error instanceof Error ? error.message : String(error));
       onTypingDoneCalled.current = false;
       // Add error message with isTyping true
       const errorMsg: Message = {
@@ -932,7 +897,7 @@ title: <title>
             <div className="text-center text-muted">Loading...</div>
           ) : (
             <>
-              {messages.map((msg: any) => {
+              {messages.map((msg: Message) => {
                 const isUser = msg.user_id === user?.sub;
                 const isOld = msg.gemini_response && msg.content;
 
@@ -945,17 +910,19 @@ title: <title>
                         </div>
                         <div className="message-bubble message-ai mr-auto">
                           {msg.contentType == "text" ? (
-                            <ReactMarkdown>{msg.gemini_response}</ReactMarkdown>
+                            <ReactMarkdown>{msg.gemini_response || ''}</ReactMarkdown>
                           ) : (
                             <Image
                               width={500}
                               height={300}
-                              src={msg.gemini_response}
+                              src={msg.gemini_response || msg.content || ''}
                               alt={`AI response in ${mode} mode`}
                               className="w-full cursor-pointer"
                               onClick={() => {
-                                setCurrimg(msg.gemini_response);
-                                setImageViewMode(true);
+                                if (msg.gemini_response) {
+                                  setCurrimg(msg.gemini_response);
+                                  setImageViewMode(true);
+                                }
                               }}
                             />
                           )}
@@ -1023,12 +990,14 @@ title: <title>
                                 <Image
                                   width={500}
                                   height={300}
-                                  src={msg.gemini_response || msg.content}
+                                  src={msg.gemini_response || msg.content || ''}
                                   alt={`User message in ${mode} mode`}
                                   className="w-full cursor-pointer"
                                   onClick={() => {
-                                    setCurrimg(msg.gemini_response || msg.content);
-                                    setImageViewMode(true);
+                                    if (msg.gemini_response) {
+                                      setCurrimg(msg.gemini_response);
+                                      setImageViewMode(true);
+                                    }
                                   }}
                                 />
                               )
@@ -1068,7 +1037,6 @@ title: <title>
                             )}
                           </div>
                         )}
-                        {/* </div> */}
                       </div>
                     )}
                   </React.Fragment>
