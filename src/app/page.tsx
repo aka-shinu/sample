@@ -194,7 +194,6 @@ export default function Home() {
   const [input2, setInput2] = useState("");
   const [mode, setMode] = useState<"text" | "image">("text");
   const sideBarref = useRef<HTMLDivElement>(null);
-  const [geminiLoading, setGeminiLoading] = useState(false);
   const [pendingAIMessage, setPendingAIMessage] = useState<null | {
     type: "text" | "image";
     content?: string;
@@ -211,6 +210,11 @@ export default function Home() {
   const hasCreatedInitialConversation = useRef(false);
   const onTypingDoneCalled = useRef(false);
   const isHandlingSend = useRef(false);
+  const [isGeminiLoading, setIsGeminiLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSavingGemini, setIsSavingGemini] = useState(false);
+  const [showPendingActions, setShowPendingActions] = useState(false);
+  const [pendingGeminiMessage] = useState<Message | null>(null);
 
   // Add conversation queries and mutations
   const { data: conversations = [], isLoading: isConversationsLoading } =
@@ -258,11 +262,6 @@ export default function Home() {
     contentType?: "text" | "image" | null | undefined;
   } | null>(null);
 
-  const [isGeminiLoading, setIsGeminiLoading] = useState(false);
-
-  const [pendingGeminiMessage, setPendingGeminiMessage] = useState<Message | null>(null);
-  const [showPendingActions, setShowPendingActions] = useState(false);
-
   // Add state for bottom sheet/modal
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const fileInputPhotosRef = useRef<HTMLInputElement>(null);
@@ -271,12 +270,6 @@ export default function Home() {
 
   // Add state for pausing Gemini response
   const [isPaused, setIsPaused] = useState<PauseState>("idle");
-
-  // Add state for search term
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Restore necessary state variables with setters
-  const [isSavingGemini, setIsSavingGemini] = useState(false);
 
   // Create initial conversation if none exists (run only once per session)
   useEffect(() => {
@@ -596,7 +589,7 @@ title: <title>
     addMessage.status === "pending" ||
     geminiText.status === "pending" ||
     geminiImage.status === "pending" ||
-    geminiLoading;
+    isGeminiLoading;
 
   useEffect(() => {
     if (
